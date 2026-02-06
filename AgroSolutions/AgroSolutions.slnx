@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="../AuthService/AuthService.csproj" />
+    <Project Path="../ProproedadeService/ProproedadeService.csproj" />
+    <Project Path="../SersorService/SersorService.csproj" />
+    <Project Path="AlertaService.csproj" />
+  </Folder>
+</Solution>
