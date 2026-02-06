@@ -18,7 +18,7 @@ builder.Services.AddSwaggerGen(options =>
         Contact = new OpenApiContact()
         {
             Name = "HACKATON",
-            Email = "suporte@agro.com"
+            Email = "hackatonagrosolutions@gmail.com"
         },
         License = new OpenApiLicense()
         {
