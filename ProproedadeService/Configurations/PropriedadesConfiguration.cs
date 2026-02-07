@@ -15,7 +15,7 @@ namespace PropriedadeService.Configurations
             builder.Property(x => x.Nome).HasColumnOrder(1).HasColumnType("varchar(100)").IsRequired();
             builder.Property(x => x.Cidade).HasColumnOrder(2).HasColumnType("varchar(100)").IsRequired();
             builder.Property(x => x.Estado).HasColumnOrder(3).HasColumnType("char(2)").IsRequired();
-            builder.Property(x => x.AreaHectares).HasColumnOrder(4).HasColumnType("decimal(10,2)").IsRequired();
+            builder.Property(x => x.AreaHectares).HasColumnOrder(4).HasPrecision(18, 2).IsRequired();
 
             // Relacionamento 1:N (Uma Propriedade tem muitos Talhões)
             builder.HasMany(x => x.Talhoes).WithOne(t => t.Propriedade).HasForeignKey(t => t.PropriedadeId).OnDelete(DeleteBehavior.Cascade);
