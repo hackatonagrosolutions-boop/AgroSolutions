@@ -16,6 +16,7 @@ using PropriedadeService.Repositories.Interface;
 using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
+using PropriedadeService.Swagger;
 
 internal class Program
 {
@@ -98,6 +99,22 @@ internal class Program
             {
                 options.IncludeXmlComments(xmlPath);
             }
+
+            options.DocumentFilter<IncludeAllDtosDocumentFilter>();
+
+            options.CustomSchemaIds(type =>
+            {
+                var name = type.Name;
+                if (type.IsGenericType)
+                {
+                    var genericArgs = string.Join("_", type.GetGenericArguments().Select(t => t.Name));
+                    name = $"{name.Split('`')[0]}_{genericArgs}";
+                }
+                return name;
+            });
+
+            options.OrderActionsBy(apiDesc =>
+                $"{apiDesc.ActionDescriptor.RouteValues["controller"]}_{apiDesc.RelativePath}");
         });
         #endregion
 
@@ -164,6 +181,7 @@ internal class Program
             return Results.Created($"/propriedades/{propriedade.Id}", propriedade);
         })
         .WithTags("Propriedades")
+        .WithOpenApi()
         .RequireAuthorization();
 
         app.MapGet("/api/propriedades", async (
@@ -194,6 +212,7 @@ internal class Program
             return Results.Ok(response);
         })
         .WithTags("Propriedades")
+        .WithOpenApi()
         .RequireAuthorization();
 
         app.MapGet("/api/propriedades/{id}", async (
@@ -225,6 +244,7 @@ internal class Program
             return Results.Ok(response);
         })
         .WithTags("Propriedades")
+        .WithOpenApi()
         .RequireAuthorization();
 
         app.MapPut("/api/propriedades/{id}", async (
@@ -264,6 +284,7 @@ internal class Program
             return Results.Ok(response);
         })
         .WithTags("Propriedades")
+        .WithOpenApi()
         .RequireAuthorization();
 
         app.MapDelete("/api/propriedades/{id}", async (
@@ -280,6 +301,7 @@ internal class Program
             return Results.Ok(new { message = $"Propriedade com ID {id} excluída com sucesso." });
         })
         .WithTags("Propriedades")
+        .WithOpenApi()
         .RequireAuthorization();
         #endregion
 
@@ -319,6 +341,7 @@ internal class Program
             return Results.Created($"/talhoes/{talhao.Id}", talhaoResponseDto);
         })
         .WithTags("Talhões")
+        .WithOpenApi()
         .RequireAuthorization();
 
         app.MapGet("/api/talhoes", async (
@@ -344,6 +367,7 @@ internal class Program
             return Results.Ok(talhoesDto);
         })
         .WithTags("Talhões")
+        .WithOpenApi()
         .RequireAuthorization();
 
         app.MapGet("/api/talhoes/{id}", async (
@@ -370,6 +394,7 @@ internal class Program
             return Results.Ok(talhaoResponseDto);
         })
         .WithTags("Talhões")
+        .WithOpenApi()
         .RequireAuthorization();
 
         app.MapPut("/api/talhoes/{id}", async (
@@ -403,6 +428,7 @@ internal class Program
             return Results.Ok(talhaoResponseDto);
         })
         .WithTags("Talhões")
+        .WithOpenApi()
         .RequireAuthorization();
 
         app.MapDelete("/api/talhoes/{id}", async (
@@ -417,6 +443,7 @@ internal class Program
             return Results.Ok(new { message = $"Talhão com ID {id} excluído com sucesso." });
         })
         .WithTags("Talhões")
+        .WithOpenApi()
         .RequireAuthorization();
         #endregion
 
