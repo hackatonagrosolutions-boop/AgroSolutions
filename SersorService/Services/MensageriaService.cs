@@ -13,7 +13,7 @@ public class MensageriaService
         using var connection = await factory.CreateConnectionAsync();
         using var channel = await connection.CreateChannelAsync();
 
-        await channel.QueueDeclareAsync(queue: "fila_alertas",
+        await channel.QueueDeclareAsync(queue: "fila_alertas_agrosolutions",
                                         durable: true,
                                         exclusive: false,
                                         autoDelete: false,
@@ -21,6 +21,6 @@ public class MensageriaService
 
         var message = JsonSerializer.Serialize(alerta);
         var body = Encoding.UTF8.GetBytes(message);
-        await channel.BasicPublishAsync(exchange: string.Empty,routingKey: "fila_alertas", body: body);
+        await channel.BasicPublishAsync(exchange: string.Empty,routingKey: "fila_alertas_agrosolutions", body: body);
     }
 }

@@ -1,6 +1,7 @@
 using AlertaService.Data;
 using AlertaService.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -119,38 +120,106 @@ if (app.Environment.IsDevelopment())
 //app.UseHttpsRedirection();
 app.UseAuthorization();
 
-#region [endpoints]
-app.MapGet("/api/alertas", async (int? talhaoId, AlertaDbContext db) =>
+#region [Endpoints]
+app.MapGet("/api/alertas", async (AlertaDbContext db) =>
 {
-    var query = db.Alertas.AsQueryable();
+    var alertas = await db.Alertas
+        .OrderByDescending(a => a.DataAlerta)
+        .ThenByDescending(a => a.Id)
+        .ToListAsync();
 
-    if (talhaoId.HasValue)
+    return Results.Ok(new
     {
-        query = query.Where(a => a.TalhaoId == talhaoId.Value);
+        total = alertas.Count,
+        dados = alertas
+    });
+})
+.RequireAuthorization()
+.WithTags("Alertas")
+.WithOpenApi(operation =>
+{
+    operation.Summary = "Lista todos os alertas";
+    operation.Description = "Retorna todos os alertas cadastrados ordenados por data (mais recentes primeiro).";
+
+    return operation;
+});
+
+app.MapGet("/api/alertas/talhao", async (
+    int talhaoId,
+    AlertaDbContext db) =>
+{
+    var alertas = await db.Alertas
+        .Where(a => a.TalhaoId == talhaoId)
+        .OrderByDescending(a => a.DataAlerta)
+        .ThenByDescending(a => a.Id)
+        .ToListAsync();
+
+    return Results.Ok(new
+    {
+        total = alertas.Count,
+        talhaoId,
+        dados = alertas
+    });
+})
+.RequireAuthorization()
+.WithTags("Alertas")
+.WithName("ListarAlertasPorTalhao")
+.WithOpenApi(operation =>
+{
+    operation.Summary = "Lista alertas de um talhão";
+    operation.Description = "Retorna todos os alertas de um talhão específico ordenados por data.";
+    return operation;
+});
+
+app.MapGet("/api/alertas/talhaoperiodotipoalerta", async (
+    int talhaoId,
+    string tipoAlerta,
+    string? dataInicio,
+    string? dataFim,
+    AlertaDbContext db) =>
+{
+    if (string.IsNullOrWhiteSpace(tipoAlerta))
+    {
+        return Results.BadRequest(new { erro = "O tipo de alerta é obrigatório" });
+    }
+
+    var query = db.Alertas
+        .Where(a => a.TalhaoId == talhaoId)
+        .Where(a => a.TipoAlerta == tipoAlerta);
+
+    if (!string.IsNullOrWhiteSpace(dataInicio) &&
+        DateTime.TryParse(dataInicio, out var dInicio))
+    {
+        query = query.Where(a => a.DataAlerta >= dInicio);
+    }
+
+    if (!string.IsNullOrWhiteSpace(dataFim) &&
+         DateTime.TryParse(dataFim, out var dFim))
+    {
+        var dFimAjustada = dFim.Date.AddDays(1).AddTicks(-1);
+        query = query.Where(a => a.DataAlerta <= dFimAjustada);
     }
 
     var alertas = await query
         .OrderByDescending(a => a.DataAlerta)
+        .ThenByDescending(a => a.Id)
         .ToListAsync();
 
-    return Results.Ok(alertas);
+    return Results.Ok(new
+    {
+        total = alertas.Count,
+        dados = alertas
+    });
 })
 .RequireAuthorization()
-.WithName("GetAlertas")
-.WithOpenApi();
-
-app.MapGet("/api/alertas/talhao/{id}", async (int id, AlertaDbContext db) =>
+.WithTags("Alertas")
+.WithName("PesquisarAlertas")
+.WithOpenApi(operation =>
 {
-    var alertas = await db.Alertas
-        .Where(a => a.TalhaoId == id)
-        .OrderByDescending(a => a.DataAlerta)
-        .ToListAsync();
-
-    return Results.Ok(alertas);
-})
-.RequireAuthorization()
-.WithName("GetAlertasByTalhao")
-.WithOpenApi();
+    operation.Summary = "Pesquisa alertas por talhão e tipo";
+    operation.Description = "Tipos de alerta: Normal, Chuva, Temperatura, Solo ou Vento.";
+    return operation;
+});
 #endregion
 
 app.MapControllers();

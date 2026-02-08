@@ -22,7 +22,7 @@ public class AlertaWorker : BackgroundService
         using var connection = await factory.CreateConnectionAsync();
         using var channel = await connection.CreateChannelAsync();
 
-        await channel.QueueDeclareAsync(queue: "fila_alertas", durable: true, exclusive: false, autoDelete: false);
+        await channel.QueueDeclareAsync(queue: "fila_alertas_agrosolutions", durable: true, exclusive: false, autoDelete: false);
 
         var consumer = new AsyncEventingBasicConsumer(channel);
 
@@ -45,6 +45,8 @@ public class AlertaWorker : BackgroundService
                         UmidadeSolo = dados.UmidadeSolo,
                         Temperatura = dados.Temperatura,
                         Vento = dados.Vento,
+                        Chuva = dados.Chuva,
+                        TipoAlerta = dados.TipoAlerta,
                         DataAlerta = dados.Data
                     };
 
@@ -56,7 +58,7 @@ public class AlertaWorker : BackgroundService
             }
         };
 
-        await channel.BasicConsumeAsync(queue: "fila_alertas", autoAck: true, consumer: consumer);
+        await channel.BasicConsumeAsync(queue: "fila_alertas_agrosolutions", autoAck: true, consumer: consumer);
         await Task.Delay(Timeout.Infinite, stoppingToken);
     }
 }

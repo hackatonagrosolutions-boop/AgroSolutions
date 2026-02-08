@@ -17,7 +17,9 @@ namespace AlertaService.Configurations
             builder.Property(x => x.UmidadeSolo).HasColumnOrder(3).HasPrecision(10, 2).IsRequired();
             builder.Property(x => x.Temperatura).HasColumnOrder(4).HasPrecision(10, 2).IsRequired();
             builder.Property(x => x.Vento).HasColumnOrder(5).HasPrecision(10, 2).IsRequired();
-            builder.Property(x => x.DataAlerta).HasColumnOrder(6).HasColumnType("datetime").IsRequired();
+            builder.Property(x => x.Chuva).HasColumnOrder(6).HasPrecision(10, 2).IsRequired();
+            builder.Property(x => x.DataAlerta).HasColumnOrder(7).HasColumnType("datetime").IsRequired();
+            builder.Property(x => x.TipoAlerta).HasColumnOrder(8).HasColumnType("varchar(20)").IsRequired();
         }
     }
 }
