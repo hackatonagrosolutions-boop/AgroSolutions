@@ -161,9 +161,7 @@ app.MapPost("/api/auth/login", async (
 })
 .WithName("Login")
 .WithTags("Auth")
-.Produces<LoginResponseDto>(200)
-.ProducesProblem(401)
-.ProducesProblem(400);
+.Produces<LoginResponseDto>(200);
 
 app.MapPost("/api/usuarios", async (
     [FromBody] UsuarioCreateDto dto,
@@ -207,7 +205,7 @@ app.MapGet("/api/usuarios/{id}", async (
 })
 .WithName("GetUsuarioById")
 .WithTags("Usuários")
-.RequireAuthorization();
+.RequireAuthorization(policy => policy.RequireRole("Admin"));
 
 app.MapGet("/api/usuarios", async (
     [FromServices] IUsuarioService service) =>
@@ -256,7 +254,7 @@ app.MapPut("/api/usuarios/{id}", async (
 })
 .WithName("UpdateUsuario")
 .WithTags("Usuários")
-.RequireAuthorization();
+.RequireAuthorization(policy => policy.RequireRole("Admin"));
 
 app.MapDelete("/api/usuarios/{id}", async (
     int id,
