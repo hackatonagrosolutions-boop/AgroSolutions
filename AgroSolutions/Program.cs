@@ -1,12 +1,29 @@
+using AlertaService.Data;
+using AlertaService.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configurar JwtSettings
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+
+// Configurar DbContext
+builder.Services.AddDbContext<AlertaDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
+
+// Registrar Repositories e Services
+builder.Services.AddHostedService<AlertaWorker>();
 
 #region [Swagger]
 builder.Services.AddSwaggerGen(options =>
@@ -62,6 +79,31 @@ builder.Services.AddSwaggerGen(options =>
 });
 #endregion
 
+#region [JWT]
+
+//Autentica o token JWT para proteger os endpoints da API
+builder.Services.AddAuthentication(x =>
+{
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(x =>
+{
+    x.RequireHttpsMetadata = false;
+    x.SaveToken = true;
+    x.TokenValidationParameters = new TokenValidationParameters
+    {
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings.SecretKey)),
+        ValidAudience = jwtSettings.Audience,
+        ValidIssuer = jwtSettings.Issuer,
+        ValidateIssuerSigningKey = true,
+        ValidateAudience = true,
+        ValidateIssuer = true,
+        ValidateLifetime = true
+    };
+});
+#endregion
+
 var app = builder.Build();
 
 // Configuração do Middleware do Swagger
@@ -74,7 +116,42 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseAuthorization();
+
+#region [endpoints]
+app.MapGet("/api/alertas", async (int? talhaoId, AlertaDbContext db) =>
+{
+    var query = db.Alertas.AsQueryable();
+
+    if (talhaoId.HasValue)
+    {
+        query = query.Where(a => a.TalhaoId == talhaoId.Value);
+    }
+
+    var alertas = await query
+        .OrderByDescending(a => a.DataAlerta)
+        .ToListAsync();
+
+    return Results.Ok(alertas);
+})
+.RequireAuthorization()
+.WithName("GetAlertas")
+.WithOpenApi();
+
+app.MapGet("/api/alertas/talhao/{id}", async (int id, AlertaDbContext db) =>
+{
+    var alertas = await db.Alertas
+        .Where(a => a.TalhaoId == id)
+        .OrderByDescending(a => a.DataAlerta)
+        .ToListAsync();
+
+    return Results.Ok(alertas);
+})
+.RequireAuthorization()
+.WithName("GetAlertasByTalhao")
+.WithOpenApi();
+#endregion
+
 app.MapControllers();
 app.Run();

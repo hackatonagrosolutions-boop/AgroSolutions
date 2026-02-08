@@ -1,12 +1,30 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
+using MongoDB.Driver;
+using SersorService.DTOs;
+using SersorService.Models;
 using System.Reflection;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configurar JwtSettings
+var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+
+// Registrar MongoDB
+builder.Services.AddSingleton<IMongoClient>(s =>
+    new MongoClient(builder.Configuration.GetValue<string>("MongoDbSettings:ConnectionString")));
 
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
+
+// Registrar Repositories e Services
+builder.Services.AddScoped<MensageriaService>();
 
 #region [Swagger]
 builder.Services.AddSwaggerGen(options =>
@@ -62,6 +80,31 @@ builder.Services.AddSwaggerGen(options =>
 });
 #endregion
 
+#region [JWT]
+
+//Autentica o token JWT para proteger os endpoints da API
+builder.Services.AddAuthentication(x =>
+{
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(x =>
+{
+    x.RequireHttpsMetadata = false;
+    x.SaveToken = true;
+    x.TokenValidationParameters = new TokenValidationParameters
+    {
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings.SecretKey)),
+        ValidAudience = jwtSettings.Audience,
+        ValidIssuer = jwtSettings.Issuer,
+        ValidateIssuerSigningKey = true,
+        ValidateAudience = true,
+        ValidateIssuer = true,
+        ValidateLifetime = true
+    };
+});
+#endregion
+
 var app = builder.Build();
 
 // Configuração do Middleware do Swagger
@@ -74,7 +117,46 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 app.UseAuthorization();
+
 app.MapControllers();
+
+#region [Endpoints]
+app.MapPost("/api/sensores/leitura", async (
+    [FromBody] LeituraSensorCreateDto dto,
+    IMongoClient mongoClient,
+    MensageriaService rabbitService) =>
+{
+    var database = mongoClient.GetDatabase("AgroSolutions_Sensores");
+    var collection = database.GetCollection<LeituraSensor>("Leituras");
+
+    var leitura = new LeituraSensor
+    {
+        TalhaoId = dto.TalhaoId,
+        UmidadeSolo = dto.UmidadeSolo,
+        Temperatura = dto.Temperatura,
+        Vento = dto.Vento,
+        DataLeitura = dto.DataLeitura ?? DateTime.UtcNow
+    };
+
+    await collection.InsertOneAsync(leitura);
+
+    if (leitura.UmidadeSolo < 30 || leitura.Vento > 50)
+    {
+        await rabbitService.PublicarAlertaAsync(new
+        {
+            Mensagem = "Condições críticas detectadas!",
+            TalhaoId = leitura.TalhaoId,
+            Umidade = leitura.UmidadeSolo,
+            Vento = leitura.Vento,
+            Data = leitura.DataLeitura
+        });
+    }
+
+    return Results.Created($"/api/sensores/leitura/{leitura.Id}", leitura);
+})
+.RequireAuthorization();
+#endregion
+
 app.Run();
