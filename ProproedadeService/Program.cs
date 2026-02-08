@@ -1,14 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using PropriedadeService.Controller;
+using PropriedadeService.Controller.Interface;
 using PropriedadeService.Data;
 using PropriedadeService.DTOs;
 using PropriedadeService.Models;
-using PropriedadeService.PropriedadeController.Interface;
 using PropriedadeService.PropriedadeController;
+using PropriedadeService.PropriedadeController.Interface;
 using PropriedadeService.Repositories;
 using PropriedadeService.Repositories.Interface;
 using System.Reflection;
+using System.Text.Json.Serialization;
 
 internal class Program
 {
@@ -21,13 +24,20 @@ internal class Program
         builder.Services.AddDbContext<PropriedadesDbContext>(options =>
             options.UseSqlServer(connectionString));
 
-        builder.Services.AddControllers();
+        builder.Services.AddControllers()
+            .AddJsonOptions(options =>
+             {
+                 options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+             });
+
 
         builder.Services.AddEndpointsApiExplorer();
 
         // Registrar Repositories e Services
         builder.Services.AddScoped<IPropriedadeRepository, PropriedadeRepository>();
         builder.Services.AddScoped<IPropriedadeController, PropriedadeController>();
+        builder.Services.AddScoped<ITalhaoRepository, TalhaoRepository>();
+        builder.Services.AddScoped<ITalhaoController, TalhaoController>();
 
         #region [Swagger]
         builder.Services.AddSwaggerGen(options =>
@@ -99,7 +109,7 @@ internal class Program
         //app.UseAuthorization();
         app.MapControllers();
 
-        #region [endpoints - Propriedade]
+        #region [Endpoints - Propriedade]
         app.MapPost("/api/propriedades", async (
             [FromBody] PropriedadeCreateDto PropriedadeDto,
             [FromServices] IPropriedadeController propriedadeService) =>
@@ -113,6 +123,7 @@ internal class Program
             };
 
             await propriedadeService.CriarPropriedadeAsync(propriedade);
+
             return Results.Created($"/propriedades/{propriedade.Id}", propriedade);
         });
 
@@ -120,15 +131,57 @@ internal class Program
             [FromServices] IPropriedadeController propriedadeService) =>
         {
             var propriedades = await propriedadeService.ListarPropriedadeAsync();
-            return (propriedades == null || !propriedades.Any()) ? Results.NotFound(new { message = "Não há propriedades cadastradas." }) : Results.Ok(propriedades);
+
+            if (propriedades == null || !propriedades.Any())
+                return Results.NotFound(new { message = "Não há propriedades cadastradas." });
+
+            var response = propriedades.Select(p => new PropriedadeResponseResumoDto
+            {
+                Id = p.Id,
+                Nome = p.Nome,
+                Cidade = p.Cidade,
+                Estado = p.Estado,
+                AreaHectares = p.AreaHectares,
+                Talhoes = p.Talhoes?.Select(t => new TalhaoResponseResumoDto
+                {
+                    Id = t.Id,
+                    Nome = t.Nome,
+                    Cultura = t.Cultura,
+                    Status = t.Status,
+                    AreaHectares = (decimal)t.AreaHectares
+                }).ToList() ?? new List<TalhaoResponseResumoDto>()
+            });
+
+            return Results.Ok(response);
         });
 
         app.MapGet("/api/propriedades/{id}", async (
             int id,
             [FromServices] IPropriedadeController propriedadeService) =>
         {
-            var propriedades = await propriedadeService.BuscarPorIdAsync(id);
-            return propriedades is null ? Results.NotFound(new { message = $"Propriedade com ID {id} não encontrada." }) : Results.Ok(propriedades);
+            var p = await propriedadeService.BuscarPorIdAsync(id);
+
+            if (p is null)
+                return Results.NotFound(new { message = $"Propriedade com ID {id} não encontrada." });
+
+            var response = new PropriedadeResponseResumoDto
+            {
+                Id = p.Id,
+                Nome = p.Nome,
+                Cidade = p.Cidade,
+                Estado = p.Estado,
+                AreaHectares = p.AreaHectares,
+                Talhoes = p.Talhoes?.Select(t => new TalhaoResponseResumoDto
+                {
+                    Id = t.Id,
+                    Nome = t.Nome,
+                    Cultura = t.Cultura,
+                    Status = t.Status,
+                    AreaHectares = (decimal)t.AreaHectares
+                }).ToList() ?? new List<TalhaoResponseResumoDto>()
+            };
+
+            return Results.Ok(response);
         });
 
         app.MapPut("/api/propriedades/{id}", async (
@@ -138,11 +191,14 @@ internal class Program
         {
             var propriedade = await propriedadeService.BuscarPorIdAsync(id);
             if (propriedade == null)
+            {
                 return Results.NotFound(new { message = $"Propriedade com ID {id} não encontrada." });
-                    propriedade.Nome = PropriedadeDto.Nome;
-                    propriedade.Cidade = PropriedadeDto.Cidade;
-                    propriedade.Estado = PropriedadeDto.Estado;
-                    propriedade.AreaHectares = PropriedadeDto.AreaTotal;
+            }
+
+            propriedade.Nome = PropriedadeDto.Nome;
+            propriedade.Cidade = PropriedadeDto.Cidade;
+            propriedade.Estado = PropriedadeDto.Estado;
+            propriedade.AreaHectares = PropriedadeDto.AreaTotal;
 
             await propriedadeService.AtualizarPropriedadeAsync(propriedade);
             return Results.Ok(propriedade);
@@ -154,10 +210,139 @@ internal class Program
         {
             var propriedade = await propriedadeService.BuscarPorIdAsync(id);
             if (propriedade == null)
+            {
                 return Results.NotFound(new { message = $"Propriedade com ID {id} não encontrada." });
+            }
 
             await propriedadeService.RemoverPropriedadeAsync(id);
             return Results.Ok(new { message = $"Propriedade com ID {id} excluída com sucesso." });
+        });
+        #endregion
+
+        #region[Endpoint - Talhão]
+        app.MapPost("/api/talhoes", async (
+            [FromBody] TalhaoCreateDto TalhaoDto,
+            [FromServices] ITalhaoController talhaoService,
+            [FromServices] IPropriedadeController propriedadeService) =>
+        {
+            var propriedade = await propriedadeService.BuscarPorIdAsync(TalhaoDto.PropriedadeId);
+
+            if (propriedade == null)
+            {
+                return Results.BadRequest(new { message = $"A propriedade com ID {TalhaoDto.PropriedadeId} não existe." });
+            }
+
+            var talhao = new Talhao
+            {
+                Nome = TalhaoDto.Nome,
+                Cultura = TalhaoDto.Cultura,
+                AreaHectares = TalhaoDto.AreaHectares,
+                PropriedadeId = TalhaoDto.PropriedadeId
+            };
+
+            await talhaoService.CriarTalhaoAsync(talhao);
+
+            var talhaoResponseDto = new TalhaoResponseDto
+            {
+                Id = talhao.Id,
+                Nome = talhao.Nome,
+                Cultura = talhao.Cultura,
+                Status = talhao.Status,
+                AreaHectares = talhao.AreaHectares,
+                PropriedadeId = talhao.PropriedadeId
+            };
+
+            return Results.Created($"/talhoes/{talhao.Id}", talhaoResponseDto);
+        });
+
+        app.MapGet("/api/talhoes", async (
+            [FromServices] ITalhaoController talhaoService) =>
+        {
+            var talhoes = await talhaoService.ListarTalhaoAsync();
+
+            if (talhoes == null || !talhoes.Any())
+            {
+                return Results.NotFound(new { message = "Não há talhões cadastrados." });
+            }
+
+            var talhoesDto = talhoes.Select(t => new TalhaoResponseDto
+            {
+                Id = t.Id,
+                Nome = t.Nome,
+                Cultura = t.Cultura,
+                Status = t.Status,
+                AreaHectares = t.AreaHectares,
+                PropriedadeId = t.PropriedadeId
+            }).ToList();
+
+            return Results.Ok(talhoesDto);
+        });
+
+        app.MapGet("/api/talhoes/{id}", async (
+            int id,
+            [FromServices] ITalhaoController talhaoService) =>
+        {
+            var talhao = await talhaoService.BuscarPorIdAsync(id);
+
+            if (talhao is null)
+            {
+                return Results.NotFound(new { message = $"Talhão com ID {id} não encontrado." });
+            }
+
+            var talhaoResponseDto = new TalhaoResponseDto
+            {
+                Id = talhao.Id,
+                Nome = talhao.Nome,
+                Cultura = talhao.Cultura,
+                Status = talhao.Status,
+                AreaHectares = talhao.AreaHectares,
+                PropriedadeId = talhao.PropriedadeId,
+            };
+
+            return Results.Ok(talhaoResponseDto);
+        });
+
+        app.MapPut("/api/talhoes/{id}", async (
+            int id,
+            [FromBody] TalhaoUpdateDto TalhaoDto,
+            [FromServices] ITalhaoController talhaoService) =>
+        {
+            var talhao = await talhaoService.BuscarPorIdAsync(id);
+            if (talhao == null)
+            {
+                return Results.NotFound(new { message = $"Talhão com ID {id} não encontrado." });
+            }
+
+            talhao.Nome = TalhaoDto.Nome;
+            talhao.Cultura = TalhaoDto.Cultura;
+            talhao.AreaHectares = TalhaoDto.AreaHectares;
+            talhao.Status = TalhaoDto.Status;
+
+            await talhaoService.AtualizarTalhaoAsync(talhao);
+
+            var talhaoResponseDto = new TalhaoResponseDto
+            {
+                Id = talhao.Id,
+                Nome = talhao.Nome,
+                Cultura = talhao.Cultura,
+                Status = talhao.Status,
+                AreaHectares = talhao.AreaHectares,
+                PropriedadeId = talhao.PropriedadeId
+            };
+
+            return Results.Ok(talhaoResponseDto);
+        });
+
+        app.MapDelete("/api/talhoes/{id}", async (
+            int id,
+            [FromServices] ITalhaoController talhaoService) =>
+        {
+            var talhao = await talhaoService.BuscarPorIdAsync(id);
+            if (talhao == null)
+                return Results.NotFound(new { message = $"Talhão com ID {id} não encontrado." });
+
+            await talhaoService.RemoverTalhaoAsync(id);
+            return Results.Ok(new { message = $"Talhão com ID {id} excluído com sucesso." });
         });
         #endregion
 

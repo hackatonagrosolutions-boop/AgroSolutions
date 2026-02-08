@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PropriedadeService.Data;
 
@@ -10,9 +11,11 @@ using PropriedadeService.Data;
 namespace PropriedadeService.Migrations
 {
     [DbContext(typeof(PropriedadesDbContext))]
-    partial class PropriedadesDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260207220643_alteraestruturabancodados")]
+    partial class alteraestruturabancodados
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
