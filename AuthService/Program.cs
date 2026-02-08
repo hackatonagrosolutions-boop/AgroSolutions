@@ -50,8 +50,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtSettings.Issuer,
         ValidAudience = jwtSettings.Audience,
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.ASCII.GetBytes(jwtSettings.SecretKey)),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings.SecretKey)),
         ClockSkew = TimeSpan.Zero
     };
 });
@@ -196,7 +195,7 @@ app.MapPost("/api/usuarios", async (
     return Results.Created($"/api/usuarios/{usuario.Id}", usuario);
 })
 .WithName("CreateUsuario")
-.WithTags("Usuarios")
+.WithTags("Usuários")
 .AllowAnonymous();
 
 app.MapGet("/api/usuarios/{id}", async (
@@ -207,7 +206,7 @@ app.MapGet("/api/usuarios/{id}", async (
     return usuario is null ? Results.NotFound() : Results.Ok(usuario);
 })
 .WithName("GetUsuarioById")
-.WithTags("Usuarios")
+.WithTags("Usuários")
 .RequireAuthorization();
 
 app.MapGet("/api/usuarios", async (
@@ -217,7 +216,7 @@ app.MapGet("/api/usuarios", async (
     return Results.Ok(usuarios);
 })
 .WithName("GetAllUsuarios")
-.WithTags("Usuarios")
+.WithTags("Usuários")
 .RequireAuthorization(policy => policy.RequireRole("Admin"));
 
 app.MapPut("/api/usuarios/{id}", async (
@@ -256,7 +255,7 @@ app.MapPut("/api/usuarios/{id}", async (
     return Results.Ok(usuarioExistente);
 })
 .WithName("UpdateUsuario")
-.WithTags("Usuarios")
+.WithTags("Usuários")
 .RequireAuthorization();
 
 app.MapDelete("/api/usuarios/{id}", async (
@@ -271,7 +270,7 @@ app.MapDelete("/api/usuarios/{id}", async (
     return Results.NoContent();
 })
 .WithName("DeleteUsuario")
-.WithTags("Usuarios")
+.WithTags("Usuários")
 .RequireAuthorization(policy => policy.RequireRole("Admin"));
 #endregion
 

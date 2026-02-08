@@ -1,5 +1,8 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PropriedadeService.Controller;
 using PropriedadeService.Controller.Interface;
@@ -11,6 +14,7 @@ using PropriedadeService.PropriedadeController.Interface;
 using PropriedadeService.Repositories;
 using PropriedadeService.Repositories.Interface;
 using System.Reflection;
+using System.Text;
 using System.Text.Json.Serialization;
 
 internal class Program
@@ -18,6 +22,10 @@ internal class Program
     private static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+
+        // Configurar JwtSettings
+        var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+        builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 
         // Configurar DbContext
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -93,6 +101,33 @@ internal class Program
         });
         #endregion
 
+        #region [JWT]
+
+        //Autentica o token JWT para proteger os endpoints da API
+        builder.Services.AddAuthentication(x =>
+        {
+            x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(x =>
+        {
+            x.RequireHttpsMetadata = false;
+            x.SaveToken = true;
+            x.TokenValidationParameters = new TokenValidationParameters
+            {
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings.SecretKey)),
+                ValidAudience = jwtSettings.Audience,
+                ValidIssuer = jwtSettings.Issuer,
+                ValidateIssuerSigningKey = true,
+                ValidateAudience = true,
+                ValidateIssuer = true,
+                ValidateLifetime = true
+            };
+        });
+        #endregion
+
+        builder.Services.AddAuthorization();
+
         var app = builder.Build();
 
         // Configuração do Middleware do Swagger
@@ -106,7 +141,9 @@ internal class Program
         }
 
         //app.UseHttpsRedirection();
-        //app.UseAuthorization();
+        app.UseAuthentication();
+        app.UseAuthorization();
+
         app.MapControllers();
 
         #region [Endpoints - Propriedade]
@@ -125,7 +162,9 @@ internal class Program
             await propriedadeService.CriarPropriedadeAsync(propriedade);
 
             return Results.Created($"/propriedades/{propriedade.Id}", propriedade);
-        });
+        })
+        .WithTags("Propriedades")
+        .RequireAuthorization();
 
         app.MapGet("/api/propriedades", async (
             [FromServices] IPropriedadeController propriedadeService) =>
@@ -153,7 +192,9 @@ internal class Program
             });
 
             return Results.Ok(response);
-        });
+        })
+        .WithTags("Propriedades")
+        .RequireAuthorization();
 
         app.MapGet("/api/propriedades/{id}", async (
             int id,
@@ -182,27 +223,48 @@ internal class Program
             };
 
             return Results.Ok(response);
-        });
+        })
+        .WithTags("Propriedades")
+        .RequireAuthorization();
 
         app.MapPut("/api/propriedades/{id}", async (
             int id,
             [FromBody] PropriedadeCreateDto PropriedadeDto,
             [FromServices] IPropriedadeController propriedadeService) =>
         {
-            var propriedade = await propriedadeService.BuscarPorIdAsync(id);
-            if (propriedade == null)
+            var p = await propriedadeService.BuscarPorIdAsync(id);
+            if (p == null)
             {
                 return Results.NotFound(new { message = $"Propriedade com ID {id} não encontrada." });
             }
 
-            propriedade.Nome = PropriedadeDto.Nome;
-            propriedade.Cidade = PropriedadeDto.Cidade;
-            propriedade.Estado = PropriedadeDto.Estado;
-            propriedade.AreaHectares = PropriedadeDto.AreaTotal;
+            p.Nome = PropriedadeDto.Nome;
+            p.Cidade = PropriedadeDto.Cidade;
+            p.Estado = PropriedadeDto.Estado;
+            p.AreaHectares = PropriedadeDto.AreaTotal;
 
-            await propriedadeService.AtualizarPropriedadeAsync(propriedade);
-            return Results.Ok(propriedade);
-        });
+            await propriedadeService.AtualizarPropriedadeAsync(p);
+
+            var response = new PropriedadeResponseResumoDto
+            {
+                Id = p.Id,
+                Nome = p.Nome,
+                Cidade = p.Cidade,
+                Estado = p.Estado,
+                AreaHectares = p.AreaHectares,
+                Talhoes = p.Talhoes?.Select(t => new TalhaoResponseResumoDto
+                {
+                    Id = t.Id,
+                    Nome = t.Nome,
+                    Cultura = t.Cultura,
+                    Status = t.Status,
+                    AreaHectares = (decimal)t.AreaHectares
+                }).ToList() ?? new List<TalhaoResponseResumoDto>()
+            };
+            return Results.Ok(response);
+        })
+        .WithTags("Propriedades")
+        .RequireAuthorization();
 
         app.MapDelete("/api/propriedades/{id}", async (
             int id,
@@ -216,7 +278,9 @@ internal class Program
 
             await propriedadeService.RemoverPropriedadeAsync(id);
             return Results.Ok(new { message = $"Propriedade com ID {id} excluída com sucesso." });
-        });
+        })
+        .WithTags("Propriedades")
+        .RequireAuthorization();
         #endregion
 
         #region[Endpoint - Talhão]
@@ -253,7 +317,9 @@ internal class Program
             };
 
             return Results.Created($"/talhoes/{talhao.Id}", talhaoResponseDto);
-        });
+        })
+        .WithTags("Talhões")
+        .RequireAuthorization();
 
         app.MapGet("/api/talhoes", async (
             [FromServices] ITalhaoController talhaoService) =>
@@ -276,7 +342,9 @@ internal class Program
             }).ToList();
 
             return Results.Ok(talhoesDto);
-        });
+        })
+        .WithTags("Talhões")
+        .RequireAuthorization();
 
         app.MapGet("/api/talhoes/{id}", async (
             int id,
@@ -300,7 +368,9 @@ internal class Program
             };
 
             return Results.Ok(talhaoResponseDto);
-        });
+        })
+        .WithTags("Talhões")
+        .RequireAuthorization();
 
         app.MapPut("/api/talhoes/{id}", async (
             int id,
@@ -331,7 +401,9 @@ internal class Program
             };
 
             return Results.Ok(talhaoResponseDto);
-        });
+        })
+        .WithTags("Talhões")
+        .RequireAuthorization();
 
         app.MapDelete("/api/talhoes/{id}", async (
             int id,
@@ -343,7 +415,9 @@ internal class Program
 
             await talhaoService.RemoverTalhaoAsync(id);
             return Results.Ok(new { message = $"Talhão com ID {id} excluído com sucesso." });
-        });
+        })
+        .WithTags("Talhões")
+        .RequireAuthorization();
         #endregion
 
         app.Run();
