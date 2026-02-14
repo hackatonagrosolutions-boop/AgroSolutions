@@ -31,7 +31,7 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "AgroSolutions - AlertaService",
+        Title = "HACKATON - AgroSolutions - AlertaService",
         Description = "Plataforma de IoT e análise de dados para serviço de agricultura 4.0 de precisão.",
         Contact = new OpenApiContact()
         {
