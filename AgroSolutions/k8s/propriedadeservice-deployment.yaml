@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: propriedadeservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: propriedadeservice
+  template:
+    metadata:
+      labels:
+        app: propriedadeservice
+    spec:
+      containers:
+      - name: propriedadeservice
+        image: propriedadeservice:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: Development
+        - name: ConnectionStrings__DefaultConnection
+          value: Server=sqlserver;Database=AgroSolutions_Propriedade;User=sa;Password=Your_password123;
+        - name: JwtSettings__SecretKey
+          value: your_secret_key_here
+        - name: JwtSettings__Issuer
+          value: AgroSolutions
+        - name: JwtSettings__Audience
+          value: AgroSolutionsUsers
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: propriedadeservice
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: propriedadeservice
