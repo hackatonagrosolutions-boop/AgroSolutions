@@ -76,7 +76,22 @@ O `SensorService` funciona como um **API Gateway especializado**, realizando o p
 ---
 
 ## 🧪 Teste Unitário
-![](TESTE UNITARIO.png)
+![](TESTEUNITARIO.png)
+
+---
+
+## 📨 Mensageria
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?style=for-the-badge&logo=rabbitmq&logoColor=white) 
+![](RABBITMQ.png)
+
+---
+
+## 🗄️ Banco de Dados
+![MicrosoftSQLServer](https://img.shields.io/badge/SQL_Server-CC2927?style=for-the-badge&logo=microsoft-sql-server&logoColor=white) 
+![](SQLSERVER.png)
+
+![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
+![](MONGODB.png)
 
 ---
 
