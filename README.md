@@ -8,7 +8,7 @@
 ## 📺 Apresentação e Documentação
 Para uma imersão completa na solução, utilize os links abaixo:
 
-* 🎥 **Vídeo de Apresentação:** [Assistir no Google Drive](https://drive.google.com/file/d/1obK1rZlVQMg1Ae3IBzCLjT1LOipDIqRj/view?usp=sharing)
+* 🎥 **Vídeo de Apresentação:** [Assistir no Google Drive](https://drive.google.com/file/d/1h7RSpzyaMNpsUk0Dxfv6LLGn_p36B85H/view?usp=sharing)
 * 📐 **Diagrama de Arquitetura:** [Explorar no Miro](https://miro.com/app/board/uXjVG85GX0s=/?share_link_id=873000372835)
 
 ---
