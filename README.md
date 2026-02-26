@@ -59,6 +59,22 @@ O `SensorService` funciona como um **API Gateway especializado**, realizando o p
 
 ---
 
+## 📖 Telas dos serviços
+
+### **AuthService**
+![](AUTHSERVICE.png)
+
+### **PropriedadeService**
+![](PROPRIEDADESERVICE.png)
+
+### **SensorService**
+![](SENSORSERVICE.png)
+
+### **AlertaService**
+![](ALERTASERVICE.png)
+
+---
+
 ## 📊 Infraestrutura e Observabilidade
 Um diferencial crítico deste projeto é a mentalidade **DevOps** aplicada desde a concepção:
 
