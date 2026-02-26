@@ -59,7 +59,7 @@ O `SensorService` funciona como um **API Gateway especializado**, realizando o p
 
 ---
 
-## 📖 Telas dos serviços
+## 🖥️ Swagger
 
 ### **AuthService**
 ![](AUTHSERVICE.png)
@@ -72,6 +72,11 @@ O `SensorService` funciona como um **API Gateway especializado**, realizando o p
 
 ### **AlertaService**
 ![](ALERTASERVICE.png)
+
+---
+
+## 🧪 Teste Unitário
+![](TESTE UNITARIO.png)
 
 ---
 
