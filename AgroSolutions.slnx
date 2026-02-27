@@ -6,7 +6,6 @@
     <Project Path="SersorService/SersorService.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="AlertaServiceTests/AlertaServiceTests.csproj" />
     <Project Path="PropriedadeService.Tests/PropriedadeServiceTests.csproj" />
   </Folder>
 </Solution>
