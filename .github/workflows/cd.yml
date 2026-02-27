@@ -7,6 +7,14 @@ on:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2019-latest
+        env:
+          SA_PASSWORD: "Your_password123"
+          ACCEPT_EULA: "Y"
+        ports:
+          - 1433:1433
     env:
       REGISTRY: ghcr.io/${{ github.repository_owner }}
       IMAGE_TAG: ${{ github.sha }}
@@ -33,17 +41,17 @@ jobs:
       - name: Run EF Core Migrations for PropriedadeService
         run: dotnet ef database update --project ./ProproedadeService/PropriedadeService.csproj
         env:
-          ConnectionStrings__DefaultConnection: ${{ secrets.PROPRIEDADE_CONNECTION_STRING }}
+          ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=PropriedadeDb;User Id=sa;Password=Your_password123;"
 
       - name: Run EF Core Migrations for AlertaService
         run: dotnet ef database update --project ./AlertaService/AlertaService.csproj
         env:
-          ConnectionStrings__DefaultConnection: ${{ secrets.ALERTA_CONNECTION_STRING }}
+          ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=AlertaDb;User Id=sa;Password=Your_password123;"
 
       - name: Run EF Core Migrations for AuthService
         run: dotnet ef database update --project ./AuthService/AuthService.csproj
         env:
-          ConnectionStrings__DefaultConnection: ${{ secrets.AUTH_CONNECTION_STRING }}
+          ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=AuthDb;User Id=sa;Password=Your_password123;"
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
