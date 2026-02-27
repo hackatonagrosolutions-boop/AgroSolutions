@@ -41,17 +41,17 @@ jobs:
       - name: Run EF Core Migrations for PropriedadeService
         run: dotnet ef database update --project ./ProproedadeService/PropriedadeService.csproj
         env:
-          ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=PropriedadeDb;User Id=sa;Password=Your_password123;"
+          ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=PropriedadeDb;User Id=sa;Password=Your_password123;Encrypt=False;"
 
       - name: Run EF Core Migrations for AlertaService
         run: dotnet ef database update --project ./AlertaService/AlertaService.csproj
         env:
-          ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=AlertaDb;User Id=sa;Password=Your_password123;"
+          ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=AlertaDb;User Id=sa;Password=Your_password123;Encrypt=False;"
 
       - name: Run EF Core Migrations for AuthService
         run: dotnet ef database update --project ./AuthService/AuthService.csproj
         env:
-          ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=AuthDb;User Id=sa;Password=Your_password123;"
+          ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=AuthDb;User Id=sa;Password=Your_password123;Encrypt=False;"
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
