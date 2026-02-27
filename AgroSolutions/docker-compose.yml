@@ -3,7 +3,8 @@ version: '3.9'
 services:
   authservice:
     build:
-      context: ../AuthService
+      context: ..
+      dockerfile: AuthService/Dockerfile
     ports:
       - "5001:80"
     environment:
@@ -17,7 +18,8 @@ services:
 
   propriedadeservice:
     build:
-      context: ../ProproedadeService
+      context: ..
+      dockerfile: ProproedadeService/Dockerfile
     ports:
       - "5002:80"
     environment:
@@ -32,7 +34,8 @@ services:
 
   sersorservice:
     build:
-      context: ../SersorService
+      context: ..
+      dockerfile: SersorService/Dockerfile
     ports:
       - "5003:80"
     environment:
@@ -47,7 +50,8 @@ services:
 
   alertaservice:
     build:
-      context: ./AlertaService
+      context: ..
+      dockerfile: AgroSolutions/AlertaService/Dockerfile
     ports:
       - "5004:80"
     environment:
