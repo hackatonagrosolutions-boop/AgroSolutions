@@ -123,5 +123,64 @@ Um diferencial crítico deste projeto é a mentalidade **DevOps** aplicada desde
 
 ---
 
+## 🛳️ Orquestração Local com Docker Compose
+
+O arquivo `docker-compose-ghcr.yml` é responsável por orquestrar todos os microsserviços, bancos de dados, mensageria e ferramentas de observabilidade da solução AgroSolutions em um ambiente local, utilizando contêineres Docker. Ele facilita o deploy e a execução de todos os componentes necessários para o funcionamento completo do sistema, sem a necessidade de instalar cada dependência manualmente.
+
+> **Nota:** Se você preferir buildar os serviços localmente (em vez de usar as imagens do registry), utilize o arquivo `docker-compose.yml`. Ele irá construir as imagens a partir do código fonte presente na sua máquina.
+
+### Serviços Orquestrados
+- **authservice**: Serviço de autenticação e cadastro de usuários, utiliza SQL Server como banco de dados.
+- **propriedadeservice**: Gerencia propriedades e talhões, também utiliza SQL Server.
+- **sersorservice**: Responsável pela ingestão e parsing de dados de sensores IoT, utiliza MongoDB.
+- **alertaservice**: Processa e armazena alertas, utiliza SQL Server.
+- **sqlserver**: Banco de dados relacional utilizado pelos serviços Auth, Propriedade e Alerta.
+- **mongodb**: Banco de dados NoSQL utilizado pelo SensorService.
+- **rabbitmq**: Broker de mensageria para comunicação assíncrona entre microsserviços.
+- **prometheus**: Coleta métricas dos serviços para monitoramento.
+- **grafana**: Visualização de métricas e dashboards customizados.
+
+Cada serviço é iniciado em seu próprio contêiner, com as variáveis de ambiente e dependências já configuradas para integração automática.
+
+### Como Executar Localmente
+
+#### Pré-requisitos
+- [Docker](https://www.docker.com/get-started) e [Docker Compose](https://docs.docker.com/compose/) instalados na máquina.
+
+#### Passos para execução
+1. Abra um terminal na raiz do projeto (onde está o arquivo `docker-compose-ghcr.yml`).
+2. Execute os comandos:
+   
+   ```sh
+   docker login ghcr.io -u hackatonagrosolutions-boop -p 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
+   docker compose -f docker-compose-ghcr.yml up --pull always --build
+   ```
+   
+   Isso irá baixar as imagens necessárias do GitHub Container Registry (GHCR), criar os contêineres e iniciar todos os serviços.
+
+3. Acompanhe os logs no terminal para verificar o status dos serviços.
+4. Após a inicialização, os serviços estarão disponíveis nas seguintes portas:
+   - AuthService: http://localhost:5001/swagger
+   - PropriedadeService: http://localhost:5002/swagger
+   - SensorService: http://localhost:5003/swagger
+   - AlertaService: http://localhost:5004/swagger
+   - SQL Server: localhost:1433
+   - MongoDB: localhost:27017
+   - RabbitMQ: http://localhost:15672 (usuário/padrão: guest/guest)
+   - Prometheus: http://localhost:9090
+   - Grafana: http://localhost:3000 (senha padrão: admin)
+
+5. Para parar e remover os contêineres, utilize:
+   
+   ```sh
+   docker compose -f docker-compose-ghcr.yml down
+   ```
+
+> **Dica:** O arquivo já está configurado para garantir que as dependências (bancos, mensageria) estejam disponíveis antes de subir os microsserviços, facilitando o uso local para desenvolvimento, testes e demonstrações.
+
+---
+
 ## 🏁 Conclusão
 A arquitetura proposta demonstra maturidade ao separar preocupações de negócio de preocupações de infraestrutura. O uso de **Namespaces** no Kubernetes e **NodePorts** específicos garante uma organização lógica e acesso controlado, resultando em um sistema resiliente, fácil de monitorar e pronto para o crescimento sob demanda no agronegócio moderno.
+
+---
