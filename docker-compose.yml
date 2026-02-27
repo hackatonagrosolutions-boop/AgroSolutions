@@ -3,7 +3,7 @@ version: '3.9'
 services:
   authservice:
     build:
-      context: ../AuthService
+      context: AuthService
       dockerfile: Dockerfile
     ports:
       - "5001:80"
@@ -18,7 +18,7 @@ services:
 
   propriedadeservice:
     build:
-      context: ../ProproedadeService
+      context: ProproedadeService
       dockerfile: Dockerfile
     ports:
       - "5002:80"
@@ -34,7 +34,7 @@ services:
 
   sersorservice:
     build:
-      context: ../SersorService
+      context: SersorService
       dockerfile: Dockerfile
     ports:
       - "5003:80"
@@ -50,8 +50,8 @@ services:
 
   alertaservice:
     build:
-      context: .
-      dockerfile: AlertaService/Dockerfile
+      context: AlertaService
+      dockerfile: Dockerfile
     ports:
       - "5004:80"
     environment:

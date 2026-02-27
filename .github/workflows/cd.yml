@@ -1,9 +1,7 @@
-name: CI/CD Pipeline
+name: CD
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
     branches: [ main ]
 
 jobs:
@@ -64,21 +62,3 @@ jobs:
           context: ./AlertaService
           push: true
           tags: ${{ env.REGISTRY }}/alertaservice:${{ env.IMAGE_TAG }}
-
-  # deploy:
-  #   needs: build-test-publish
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-  #     - name: Set up Kubeconfig
-  #       run: echo "$KUBECONFIG_DATA" | base64 -d > $HOME/.kube/config
-  #       env:
-  #         KUBECONFIG_DATA: ${{ secrets.KUBECONFIG_DATA }}
-  #     - name: Set up kubectl
-  #       uses: azure/setup-kubectl@v3
-  #       with:
-  #         version: 'latest'
-  #     - name: Deploy to Kubernetes
-  #       run: |
-  #         kubectl apply -f k8s/
