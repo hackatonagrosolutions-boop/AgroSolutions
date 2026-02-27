@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sersorservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sersorservice
+  template:
+    metadata:
+      labels:
+        app: sersorservice
+    spec:
+      containers:
+      - name: sersorservice
+        image: sersorservice:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: Development
+        - name: MongoDbSettings__ConnectionString
+          value: mongodb://mongodb:27017
+        - name: JwtSettings__SecretKey
+          value: your_secret_key_here
+        - name: JwtSettings__Issuer
+          value: AgroSolutions
+        - name: JwtSettings__Audience
+          value: AgroSolutionsUsers
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sersorservice
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: sersorservice
