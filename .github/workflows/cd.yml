@@ -29,19 +29,19 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       - name: Run EF Core Migrations for PropriedadeService
-        run: dotnet ef database update --project ./ProproedadeService/PropriedadeService.csproj
+        run: dotnet-ef database update --project ./ProproedadeService/PropriedadeService.csproj
         env:
           ConnectionStrings__DefaultConnection: ${{ secrets.PROPRIEDADE_CONNECTION_STRING }}
           PATH: ${{ env.PATH }}:/github/home/.dotnet/tools
 
       - name: Run EF Core Migrations for AlertaService
-        run: dotnet ef database update --project ./AlertaService/AlertaService.csproj
+        run: dotnet-ef database update --project ./AlertaService/AlertaService.csproj
         env:
           ConnectionStrings__DefaultConnection: ${{ secrets.ALERTA_CONNECTION_STRING }}
           PATH: ${{ env.PATH }}:/github/home/.dotnet/tools
 
       - name: Run EF Core Migrations for AuthService
-        run: dotnet ef database update --project ./AuthService/AuthService.csproj
+        run: dotnet-ef database update --project ./AuthService/AuthService.csproj
         env:
           ConnectionStrings__DefaultConnection: ${{ secrets.AUTH_CONNECTION_STRING }}
           PATH: ${{ env.PATH }}:/github/home/.dotnet/tools
