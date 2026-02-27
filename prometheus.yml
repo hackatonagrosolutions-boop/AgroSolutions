@@ -1,0 +1,20 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'authservice'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['authservice:80']
+  - job_name: 'propriedadeservice'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['propriedadeservice:80']
+  - job_name: 'sersorservice'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['sersorservice:80']
+  - job_name: 'alertaservice'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['alertaservice:80']

@@ -17,6 +17,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json.Serialization;
 using PropriedadeService.Swagger;
+using Prometheus;
 
 internal class Program
 {
@@ -160,6 +161,10 @@ internal class Program
         //app.UseHttpsRedirection();
         app.UseAuthentication();
         app.UseAuthorization();
+
+        // Adiciona o endpoint /metrics para Prometheus
+        app.UseMetricServer();
+        app.UseHttpMetrics();
 
         app.MapControllers();
 

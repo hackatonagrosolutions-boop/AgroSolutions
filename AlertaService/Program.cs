@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
+using Prometheus;
 using System.Reflection;
 using System.Text;
 
@@ -119,6 +120,8 @@ if (app.Environment.IsDevelopment())
 
 //app.UseHttpsRedirection();
 app.UseAuthorization();
+app.UseMetricServer();
+app.UseHttpMetrics();
 
 #region [Endpoints]
 app.MapGet("/api/alertas", async (AlertaDbContext db) =>
