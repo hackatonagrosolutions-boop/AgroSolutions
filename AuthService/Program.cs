@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Prometheus;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Text;
@@ -127,6 +128,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMetricServer();
+app.UseHttpMetrics();
 
 #region [Endpoints]
 app.MapPost("/api/auth/login", async (

@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
+using Prometheus;
 using SersorService.DTOs;
 using SersorService.Models;
 using System.Reflection;
@@ -119,6 +120,8 @@ if (app.Environment.IsDevelopment())
 
 // app.UseHttpsRedirection();
 app.UseAuthorization();
+app.UseMetricServer();
+app.UseHttpMetrics();
 
 app.MapControllers();
 
