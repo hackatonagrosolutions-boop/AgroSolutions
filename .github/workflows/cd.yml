@@ -32,19 +32,19 @@ jobs:
         run: dotnet ef database update --project ./ProproedadeService/PropriedadeService.csproj
         env:
           ConnectionStrings__DefaultConnection: ${{ secrets.PROPRIEDADE_CONNECTION_STRING }}
-          PATH: ${{ env.PATH }}:/github/home/.dotnet/tools
+          PATH: /github/home/.dotnet/tools:${{ env.PATH }}
 
       - name: Run EF Core Migrations for AlertaService
         run: dotnet ef database update --project ./AlertaService/AlertaService.csproj
         env:
           ConnectionStrings__DefaultConnection: ${{ secrets.ALERTA_CONNECTION_STRING }}
-          PATH: ${{ env.PATH }}:/github/home/.dotnet/tools
+          PATH: /github/home/.dotnet/tools:${{ env.PATH }}
 
       - name: Run EF Core Migrations for AuthService
         run: dotnet ef database update --project ./AuthService/AuthService.csproj
         env:
           ConnectionStrings__DefaultConnection: ${{ secrets.AUTH_CONNECTION_STRING }}
-          PATH: ${{ env.PATH }}:/github/home/.dotnet/tools
+          PATH: /github/home/.dotnet/tools:${{ env.PATH }}
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
