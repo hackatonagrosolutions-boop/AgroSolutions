@@ -20,7 +20,9 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Install dotnet-ef
-        run: dotnet tool install --global dotnet-ef
+        run: |
+          dotnet tool install --global dotnet-ef
+          echo "/github/home/.dotnet/tools" >> $GITHUB_PATH
 
       - name: Restore dependencies
         run: dotnet restore
@@ -32,19 +34,16 @@ jobs:
         run: dotnet ef database update --project ./ProproedadeService/PropriedadeService.csproj
         env:
           ConnectionStrings__DefaultConnection: ${{ secrets.PROPRIEDADE_CONNECTION_STRING }}
-          PATH: /github/home/.dotnet/tools:${{ env.PATH }}
 
       - name: Run EF Core Migrations for AlertaService
         run: dotnet ef database update --project ./AlertaService/AlertaService.csproj
         env:
           ConnectionStrings__DefaultConnection: ${{ secrets.ALERTA_CONNECTION_STRING }}
-          PATH: /github/home/.dotnet/tools:${{ env.PATH }}
 
       - name: Run EF Core Migrations for AuthService
         run: dotnet ef database update --project ./AuthService/AuthService.csproj
         env:
           ConnectionStrings__DefaultConnection: ${{ secrets.AUTH_CONNECTION_STRING }}
-          PATH: /github/home/.dotnet/tools:${{ env.PATH }}
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
